@@ -40,7 +40,7 @@ def dataCollection(client, stock_map, next_friday, today):
                 }
             except Exception as e:
                 print(e)
-        # Output
+
         now = datetime.datetime.now()
         next_minute = (now + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
         sleep_seconds = (next_minute - datetime.datetime.now()).total_seconds()
@@ -51,4 +51,6 @@ def dataCollection(client, stock_map, next_friday, today):
                 break
             time.sleep(min(0.1, sleep_seconds))  # sleep max 0.1s at a time
             sleep_seconds -= 0.1
-    print(stock_map['LUV'])
+    for symbol, df in stock_map.items():
+        if not df.empty:  # skip empty DataFrames
+            df.to_csv(f"{symbol}.csv", index=False)

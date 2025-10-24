@@ -44,13 +44,14 @@ def get_earnings_options_data(client):
     calendar = response.get("earningsCalendar", [])
     tickers = []
     for entry in calendar:
-        tickers.append(entry["symbol"])
+        if entry["symbol"] not in tickers and ((entry['hour'] == 'bmo' and entry['date'] == _to) or (entry['hour'] == 'amc' and entry['date'] == _from)):
+            tickers.append(entry["symbol"])
+    print(tickers)
     stock_map = pd.Series({t: pd.DataFrame(columns=['straddlePrice', 'volatility', 'impliedMove', 'volume']) for t in tickers}) 
-    for entry in calendar:
+    if tickers == []: return
+    for ticker in tickers:
         try:
-            symbol = entry["symbol"]
-
-            response = client.option_chains(symbol=symbol, strikeCount=1, fromDate=next_friday, toDate=next_friday).json()
+            response = client.option_chains(symbol=ticker, strikeCount=1, fromDate=next_friday, toDate=next_friday).json()
             if response["numberOfContracts"] == 0: continue
 
             straddle_price = 0.0
@@ -66,12 +67,12 @@ def get_earnings_options_data(client):
                             volume += contract["totalVolume"]
                             pprint.pprint(contract)
 
-            response = client.quote(symbol_id=symbol).json()
-            asset_price = response[symbol]['quote']['mark']
+            response = client.quote(symbol_id=ticker).json()
+            asset_price = response[ticker]['quote']['mark']
             implied_move = (straddle_price / asset_price) * 100
 
 
-            stock_map[symbol].loc[len(stock_map[symbol])] = {
+            stock_map[ticker].loc[len(stock_map[ticker])] = {
                 'straddlePrice': straddle_price,
                 'volatility': volatility,
                 'impliedMove': implied_move,
@@ -81,5 +82,5 @@ def get_earnings_options_data(client):
         except Exception as e:
             print(e)
     stock_map = stock_map[stock_map.apply(len) > 0]
-
+    if (stock_map.empty): return
     dataCollection(client, stock_map, next_friday, today)
