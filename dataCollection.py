@@ -33,7 +33,9 @@ def dataCollection(client, stock_map, next_friday, today):
 
 
                 dataframe.loc[len(stock_map[key])] = {
+                    'timestamp': time.time()*1000,
                     'straddlePrice': straddle_price,
+                    'assetPrice': asset_price,
                     'volatility': volatility,
                     'impliedMove': implied_move,
                     'volume': volume
