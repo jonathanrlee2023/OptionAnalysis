@@ -47,7 +47,6 @@ def get_earnings_options_data(client):
     for entry in calendar:
         if entry["symbol"] not in tickers and ((entry['hour'] == 'bmo' and entry['date'] == _to) or (entry['hour'] == 'amc' and entry['date'] == _from)):
             tickers.append(entry["symbol"])
-    print(tickers)
     stock_map = pd.Series({t: pd.DataFrame(columns=['timestamp','straddlePrice', 'assetPrice', 'volatility', 'impliedMove', 'volume']) for t in tickers}) 
     if tickers == []: return
     for ticker in tickers:
@@ -66,7 +65,6 @@ def get_earnings_options_data(client):
                             volatility = contract["volatility"]
                             straddle_price += contract["mark"]
                             volume += contract["totalVolume"]
-                            pprint.pprint(contract)
 
             response = client.quote(symbol_id=ticker).json()
             asset_price = response[ticker]['quote']['mark']
@@ -74,7 +72,7 @@ def get_earnings_options_data(client):
 
 
             stock_map[ticker].loc[len(stock_map[ticker])] = {
-                'timestamp': time.time()*1000,
+                'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'straddlePrice': straddle_price,
                 'assetPrice': asset_price,
                 'volatility': volatility,
